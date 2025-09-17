@@ -12,7 +12,7 @@ This repo is intended as a demo / internal practice project and as the companion
 ## Quick facts
 
 - **Java**: 17  
-- **Spring Boot**: 3.5.5 (from `pom.xml`)  
+- **Spring Boot**: 3.5.5
 - **Build tool**: Maven (project includes `mvnw` wrapper)  
 - **Main class**: `com.example.schedulingdemo.SchedulingDemoApplication` (has `@EnableScheduling`)
 
@@ -73,7 +73,6 @@ A small controller exposes endpoints to manage scheduled tasks at runtime:
 
 The service backing these endpoints is `com.example.schedulingdemo.Services.DynamicSchedulerService` (programmatic scheduling with `ThreadPoolTaskScheduler` and `CronTrigger`).
 
-> Note: in the uploaded zip the `DynamicSchedulerService` file contains the scheduling logic skeleton (the current repository version in this archive includes the necessary imports, the scheduler field and a `tasks` map). If you intend to publish the repo publicly, ensure the service contains the full implementations of schedule/cancel/list methods (the controller expects these to be present).
 
 ---
 
@@ -134,39 +133,3 @@ curl -X DELETE "http://localhost:8080/api/scheduler/myCron"
 ```
 
 ---
-
-## Notes, caveats & suggestions for the Medium article
-
-- **Thread pool**: You already configure a `ThreadPoolTaskScheduler` with pool size 10 — mention in the article why the default single-threaded scheduler can be a problem (long-running tasks blocking others) and how a pool fixes that.
-- **Overlap prevention**: If a scheduled job may run longer than its schedule, show approaches:
-  - Use a lock/flag inside job to skip overlapping runs, or
-  - Use `@Scheduled` + `@Async` with a pool, OR
-  - Use external distributed locks (e.g., [ShedLock](https://github.com/lukas-krecan/ShedLock)) for multi-node deployments to ensure a job runs only once cluster-wide.
-- **Externalize cron/fixed values**: Demonstrate reading cron/fixedRate from `application.properties` so readers can change schedules without code changes:
-  ```properties
-  scheduler.fixedRateMs=5000
-  scheduler.cron.everyMinute=0 * * * * *
-  ```
-  then inject via `@Value` or `@ConfigurationProperties`.
-- **Observability**: Add Actuator + Micrometer metrics for job execution times and counts. Show how to expose a `/actuator/metrics` metric for scheduled task timings.
-- **Error handling & retries**: Show how to handle exceptions in scheduled tasks and optionally add retry logic or resilient patterns.
-- **Testing**: Add unit/integration tests for scheduling using Spring's `TestTaskScheduler` or by injecting `TaskScheduler` and advancing time.
-
----
-
-## Suggested README additions (for a published demo)
-- Add small example output snapshot (logs) from one run (you can paste console output).
-- Add a short section that explains the dynamic scheduling API design and include example responses.
-- Add a short diagram (optional) showing scheduler thread pool vs single-threaded scheduler behavior.
-- Add a `LICENSE` if you want to publish publicly (MIT is common for demos).
-
----
-
-## Files used to infer this README
-
-- `pom.xml`: Spring Boot parent version `3.5.5`, `java.version` = `17`.
-- `src/main/java/com/example/schedulingdemo/SchedulingDemoApplication.java` (`@EnableScheduling`).
-- `src/main/java/com/example/schedulingdemo/ScheduledTasks.java` (`@Scheduled` methods).
-- `src/main/java/com/example/schedulingdemo/SchedulingConfig.java` (ThreadPoolTaskScheduler with pool size 10).
-- `src/main/java/com/example/schedulingdemo/Controllers/SchedulerController.java` (dynamic endpoints).
-- `src/main/java/com/example/schedulingdemo/Services/DynamicSchedulerService.java` (programmatic scheduler service — make sure this file contains the intended implementation if you plan to publish).
